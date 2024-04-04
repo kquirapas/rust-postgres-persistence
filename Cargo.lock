@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "postgres"
+name = "rust-postgres-persistence"
 version = "0.1.0"
