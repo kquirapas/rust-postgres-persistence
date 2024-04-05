@@ -1,6 +1,8 @@
 use sqlx::postgres::PgPoolOptions;
+use sqlx::Row;
 use std::error::Error;
 
+#[derive(Debug)]
 struct Book {
     pub title: String,
     pub author: String,
@@ -17,6 +19,19 @@ async fn create_book(book: &Book, pool: &sqlx::PgPool) -> Result<(), Box<dyn Err
         .await?;
 
     Ok(())
+}
+
+async fn read(pool: &sqlx::PgPool) -> Result<Book, Box<dyn Error>> {
+    let q = "SELECT title, author, isbn FROM book";
+    let query = sqlx::query(q);
+
+    let row = query.fetch_one(pool).await?;
+
+    Ok(Book {
+        title: row.get("title"),
+        author: row.get("author"),
+        isbn: row.get("isbn"),
+    })
 }
 
 async fn update_book(book: &Book, isbn: &str, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> {
@@ -50,10 +65,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     update_book(&book, &book.isbn, &pool).await?;
 
-    let res: (i32,) = sqlx::query_as("SELECT 1 + 1 as sum")
-        .fetch_one(&pool)
-        .await?;
+    let one_book = read(&pool).await?;
 
-    println!("1 + 1 = {}", res.0);
+    println!("{:?}", one_book);
+
     Ok(())
 }
